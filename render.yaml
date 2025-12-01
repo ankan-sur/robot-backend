@@ -1,0 +1,17 @@
+# Render.com Configuration
+# For deploying the Node.js WebSocket backend
+
+services:
+  - type: web
+    name: robot-cloud-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /health
