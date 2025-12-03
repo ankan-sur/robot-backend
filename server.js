@@ -113,6 +113,15 @@ function broadcastToAll(message) {
   });
 }
 
+function broadcastUiCountUpdate() {
+  broadcastToAll({
+    type: 'event',
+    event: 'ui_count',
+    uiClientCount: uiClients.size,
+    timestamp: new Date().toISOString()
+  });
+}
+
 // =============================================================================
 // REST API ENDPOINTS
 // =============================================================================
@@ -345,12 +354,16 @@ uiWss.on('connection', (ws) => {
   
   uiClients.set(clientId, client);
 
+  // Broadcast UI count update to all clients
+  broadcastUiCountUpdate();
+
   // Send welcome with available robots
   const robotList = Array.from(robots.keys()).map(id => getRobotState(id));
   ws.send(JSON.stringify({
     type: 'welcome',
     clientId,
     robots: robotList,
+    uiClientCount: uiClients.size,
     timestamp: new Date().toISOString()
   }));
 
@@ -373,6 +386,7 @@ uiWss.on('connection', (ws) => {
         ws.send(JSON.stringify({
           type: 'state',
           robotId,
+          uiClientCount: uiClients.size,
           payload: state ? {
             ...state,
             online: true
@@ -641,6 +655,9 @@ uiWss.on('connection', (ws) => {
     
     uiClients.delete(clientId);
     console.log(`[UI] Client disconnected: ${client.clientName}`);
+    
+    // Broadcast updated UI count
+    broadcastUiCountUpdate();
   });
 
   ws.on('error', (error) => {
